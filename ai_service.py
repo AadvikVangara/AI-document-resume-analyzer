@@ -32,12 +32,13 @@ def is_sdk_available() -> bool:
     return HAVE_MODERN_GENAI or HAVE_LEGACY_GENAI
 
 
-STABLE_FALLBACKS = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-3.6-flash"]
+# Google Gemini 3.x production generation models
+STABLE_FALLBACKS = ["gemini-3.5-flash-lite", "gemini-3.6-flash"]
 
 
 def get_available_models(api_key: str = None) -> List[str]:
     """
-    Returns available models, prioritizing stable models like gemini-2.0-flash and gemini-3.6-flash.
+    Returns available models, prioritizing gemini-3.5-flash-lite and gemini-3.6-flash.
     """
     api_key = api_key or os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -53,10 +54,10 @@ def get_available_models(api_key: str = None) -> List[str]:
                 if not actions or "generateContent" in actions:
                     models.append(clean_name)
             if models:
-                # Prioritize 2.0-flash and 3.6-flash at top
+                # Prioritize 3.5-flash-lite and 3.6-flash
                 models.sort(key=lambda x: (
-                    not ("2.0-flash" in x and not "lite" in x),
-                    not ("3.6-flash" in x),
+                    not ("3.5" in x and "lite" in x),
+                    not ("3.6" in x),
                     not ("flash" in x),
                     x
                 ))
@@ -67,11 +68,10 @@ def get_available_models(api_key: str = None) -> List[str]:
     return STABLE_FALLBACKS
 
 
-def call_gemini(prompt: str, system_instruction: str = "", model_name: str = "gemini-2.0-flash", api_key: str = None) -> str:
+def call_gemini(prompt: str, system_instruction: str = "", model_name: str = "gemini-3.5-flash-lite", api_key: str = None) -> str:
     """
     Unified caller for Gemini API with automated resilience.
-    If the requested model is experiencing temporary 503 (high demand) or 404 retirement,
-    it automatically fails over to high-capacity stable models (gemini-2.0-flash / gemini-2.0-flash-lite).
+    Defaults to gemini-3.5-flash-lite (high capacity, low latency) with fallback to gemini-3.6-flash.
     """
     api_key = api_key or os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -79,9 +79,9 @@ def call_gemini(prompt: str, system_instruction: str = "", model_name: str = "ge
 
     primary_model = model_name.replace("models/", "").strip()
     
-    # Priority cascade of models to try
+    # Priority cascade of models: try primary, then gemini-3.5-flash-lite, then gemini-3.6-flash
     candidate_models = [primary_model]
-    for fallback in ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-3.6-flash"]:
+    for fallback in ["gemini-3.5-flash-lite", "gemini-3.6-flash"]:
         if fallback not in candidate_models:
             candidate_models.append(fallback)
 
@@ -125,16 +125,15 @@ def call_gemini(prompt: str, system_instruction: str = "", model_name: str = "ge
                 # If server is overloaded (503) or rate-limited (429):
                 if any(x in err_msg for x in ["503", "unavailable", "high demand", "429", "rate limit", "overloaded"]):
                     if attempt == 0:
-                        time.sleep(1.5)  # brief pause before retry
+                        time.sleep(1.5)
                         continue
                     else:
-                        # 503 persisted, break and immediately switch to next model in candidate_models!
+                        # 503 persisted, break and switch to next model in candidate_models
                         break
                 # If model is deprecated/not found (404), break immediately to next model
                 elif any(x in err_msg for x in ["404", "not_found", "not available", "not supported"]):
                     break
                 else:
-                    # Non-transient error (e.g., bad API key)
                     raise e
 
     raise last_error

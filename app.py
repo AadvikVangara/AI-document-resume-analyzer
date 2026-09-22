@@ -240,14 +240,14 @@ with st.sidebar:
     st.markdown("#### 🤖 **AI Model Engine**")
     
     # Query available models if API key is active, or use safe defaults
-    dynamic_options = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-3.6-flash"]
+    dynamic_options = ["gemini-3.5-flash-lite", "gemini-3.6-flash"]
     if active_api_key:
         if "cached_models" not in st.session_state or st.session_state.get("cached_key") != active_api_key:
             fetched = ai_service.get_available_models(active_api_key)
             if fetched:
                 st.session_state.cached_models = fetched
                 st.session_state.cached_key = active_api_key
-        dynamic_options = st.session_state.get("cached_models", ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-3.6-flash"])
+        dynamic_options = st.session_state.get("cached_models", ["gemini-3.5-flash-lite", "gemini-3.6-flash"])
 
     model_options = list(dict.fromkeys(dynamic_options + ["Custom Model"]))
 
@@ -256,10 +256,10 @@ with st.sidebar:
         options=model_options,
         index=0,
         label_visibility="collapsed",
-        help="gemini-2.0-flash is fast, reliable, and high-capacity.",
+        help="gemini-3.5-flash-lite is Google's ultra-fast, high-capacity model.",
     )
     if model_choice == "Custom Model":
-        model_choice = st.text_input("Enter Model ID", value="gemini-2.0-flash")
+        model_choice = st.text_input("Enter Model ID", value="gemini-3.5-flash-lite")
 
     st.markdown("---")
 
