@@ -1,0 +1,39 @@
+Alex Morgan
+San Francisco, CA | alex.morgan@email.com | (555) 019-2834 | linkedin.com/in/alexmorgan | github.com/alexmorgan
+
+SUMMARY
+Innovative Senior Software Engineer with 5+ years of experience designing and scaling distributed systems, RESTful microservices, and AI-enabled web applications. Proven track record of improving system latency by 35% and mentoring junior developers in Agile environments.
+
+TECHNICAL SKILLS
+- Programming Languages: Python, JavaScript/TypeScript, SQL, Go
+- Frameworks & Libraries: FastAPI, Flask, Django, React, Node.js, Streamlit, PyTorch
+- Cloud & DevOps: AWS (EC2, S3, Lambda), Docker, Kubernetes, CI/CD (GitHub Actions), PostgreSQL, Redis
+- AI & GenAI: OpenAI API, Gemini API, LangChain, RAG Pipelines, Vector Databases (ChromaDB, Pinecone)
+
+PROFESSIONAL EXPERIENCE
+
+Senior Backend Engineer | CloudScale Technologies, San Francisco, CA
+June 2022 - Present
+- Architected and deployed microservices handling 2.5M daily API requests using Python (FastAPI) and PostgreSQL, reducing P99 latency by 38%.
+- Integrated Generative AI chatbots using Google Gemini API to automate customer ticket triage, decreasing resolution time from 4 hours to 15 minutes.
+- Led migration of on-premise workloads to AWS ECS and Docker, cutting monthly cloud infrastructure costs by 22% ($14,000/month).
+- Mentored a cohort of 4 junior and mid-level engineers, establishing automated unit testing standards with 85%+ test coverage.
+
+Full Stack Developer | NexaSoft Solutions, Austin, TX
+August 2019 - May 2022
+- Developed responsive web applications using React, TypeScript, and Python Flask for fintech clients.
+- Designed automated ETL data ingestion pipelines processing 500GB+ of daily financial records using Python and Redis.
+- Implemented OAuth2 and JWT authentication mechanisms, ensuring compliance with SOC-2 security protocols.
+- Collaborated in a 7-person Agile/Scrum team delivering 14 production releases on schedule.
+
+EDUCATION
+Bachelor of Science in Computer Science
+University of Texas at Austin (Graduated May 2019)
+GPA: 3.8 / 4.0
+
+PROJECTS
+- AI Document Intelligence Platform: Open-source Streamlit app processing multi-page PDFs using Gemini LLMs and semantic search. Over 1,200 GitHub stars.
+- Real-Time Crypto Analytics Engine: High-throughput WebSocket dashboard built with FastAPI, Redis, and React.
+
+CERTIFICATIONS
+- AWS Certified Solutions Architect - Associate (2023)
