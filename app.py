@@ -205,7 +205,16 @@ with st.sidebar:
 
     # Section 1: Authentication
     st.markdown("#### 🔑 **Gemini API Key**")
-    env_api_key = os.getenv("GEMINI_API_KEY", "")
+    
+    # Check Streamlit Cloud secrets first, then local environment variables
+    cloud_secret = ""
+    try:
+        if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
+            cloud_secret = st.secrets["GEMINI_API_KEY"]
+    except Exception:
+        pass
+
+    env_api_key = cloud_secret or os.getenv("GEMINI_API_KEY", "")
     user_api_key = st.text_input(
         "API Key",
         value=env_api_key,
