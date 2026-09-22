@@ -32,14 +32,16 @@ def is_sdk_available() -> bool:
     return HAVE_MODERN_GENAI or HAVE_LEGACY_GENAI
 
 
+STABLE_FALLBACKS = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-3.6-flash"]
+
+
 def get_available_models(api_key: str = None) -> List[str]:
     """
-    Dynamically queries Google API for models that support text generation (generateContent)
-    for this specific account/key.
+    Returns available models, prioritizing stable models like gemini-2.0-flash and gemini-3.6-flash.
     """
     api_key = api_key or os.getenv("GEMINI_API_KEY")
     if not api_key:
-        return ["gemini-3.6-flash"]
+        return STABLE_FALLBACKS
 
     try:
         if HAVE_MODERN_GENAI:
@@ -48,79 +50,92 @@ def get_available_models(api_key: str = None) -> List[str]:
             for m in client.models.list():
                 actions = getattr(m, "supported_actions", []) or []
                 clean_name = m.name.replace("models/", "")
-                # Only include models that support generateContent
                 if not actions or "generateContent" in actions:
                     models.append(clean_name)
             if models:
-                # Prioritize gemini-3.6-flash or flash models first
-                models.sort(key=lambda x: (not ("3.6" in x), not ("flash" in x), x))
+                # Prioritize 2.0-flash and 3.6-flash at top
+                models.sort(key=lambda x: (
+                    not ("2.0-flash" in x and not "lite" in x),
+                    not ("3.6-flash" in x),
+                    not ("flash" in x),
+                    x
+                ))
                 return models
     except Exception:
         pass
 
-    return ["gemini-3.6-flash"]
+    return STABLE_FALLBACKS
 
 
-def call_gemini(prompt: str, system_instruction: str = "", model_name: str = "gemini-3.6-flash", api_key: str = None) -> str:
+def call_gemini(prompt: str, system_instruction: str = "", model_name: str = "gemini-2.0-flash", api_key: str = None) -> str:
     """
-    Unified caller for Gemini API that abstracts SDK differences.
-    Features automated retry with exponential backoff for temporary 503 (high demand) or 429 rate limit spikes.
+    Unified caller for Gemini API with automated resilience.
+    If the requested model is experiencing temporary 503 (high demand) or 404 retirement,
+    it automatically fails over to high-capacity stable models (gemini-2.0-flash / gemini-2.0-flash-lite).
     """
     api_key = api_key or os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise ValueError("Google Gemini API Key is missing. Please provide it in the sidebar or via .env file.")
 
-    # Clean model name if user entered with "models/" prefix
-    model_name = model_name.replace("models/", "").strip()
+    primary_model = model_name.replace("models/", "").strip()
+    
+    # Priority cascade of models to try
+    candidate_models = [primary_model]
+    for fallback in ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-3.6-flash"]:
+        if fallback not in candidate_models:
+            candidate_models.append(fallback)
 
-    max_retries = 3
     last_error = None
 
-    for attempt in range(max_retries):
-        try:
-            # 1. Modern google-genai SDK
-            if HAVE_MODERN_GENAI:
-                client = genai.Client(api_key=api_key)
-                config = types.GenerateContentConfig(
-                    system_instruction=system_instruction if system_instruction else None,
-                    temperature=0.2,  # Low temperature for factual accuracy
-                )
-                response = client.models.generate_content(
-                    model=model_name,
-                    contents=prompt,
-                    config=config,
-                )
-                return response.text
+    for model_candidate in candidate_models:
+        for attempt in range(2):  # Try candidate up to 2 times
+            try:
+                # 1. Modern google-genai SDK
+                if HAVE_MODERN_GENAI:
+                    client = genai.Client(api_key=api_key)
+                    config = types.GenerateContentConfig(
+                        system_instruction=system_instruction if system_instruction else None,
+                        temperature=0.2,
+                    )
+                    response = client.models.generate_content(
+                        model=model_candidate,
+                        contents=prompt,
+                        config=config,
+                    )
+                    return response.text
 
-            # 2. Legacy google-generativeai SDK
-            elif HAVE_LEGACY_GENAI:
-                legacy_genai.configure(api_key=api_key)
-                model = legacy_genai.GenerativeModel(
-                    model_name=model_name,
-                    system_instruction=system_instruction if system_instruction else None,
-                    generation_config={"temperature": 0.2},
-                )
-                response = model.generate_content(prompt)
-                return response.text
+                # 2. Legacy google-generativeai SDK
+                elif HAVE_LEGACY_GENAI:
+                    legacy_genai.configure(api_key=api_key)
+                    model = legacy_genai.GenerativeModel(
+                        model_name=model_candidate,
+                        system_instruction=system_instruction if system_instruction else None,
+                        generation_config={"temperature": 0.2},
+                    )
+                    response = model.generate_content(prompt)
+                    return response.text
 
-            else:
-                raise RuntimeError(
-                    "Neither `google-genai` nor `google-generativeai` is installed. Please run `pip install google-genai`."
-                )
+                else:
+                    raise RuntimeError("Neither `google-genai` nor `google-generativeai` is installed.")
 
-        except Exception as e:
-            last_error = e
-            err_msg = str(e).lower()
+            except Exception as e:
+                last_error = e
+                err_msg = str(e).lower()
 
-            # If server is overloaded (503), rate limited (429), or internal error (500), sleep and retry
-            if any(x in err_msg for x in ["503", "unavailable", "high demand", "429", "rate limit", "500", "overloaded"]):
-                if attempt < max_retries - 1:
-                    wait_time = 2.0 * (attempt + 1)  # 2s, 4s, 6s
-                    time.sleep(wait_time)
-                    continue
-
-            # Non-transient error or retries exhausted
-            raise e
+                # If server is overloaded (503) or rate-limited (429):
+                if any(x in err_msg for x in ["503", "unavailable", "high demand", "429", "rate limit", "overloaded"]):
+                    if attempt == 0:
+                        time.sleep(1.5)  # brief pause before retry
+                        continue
+                    else:
+                        # 503 persisted, break and immediately switch to next model in candidate_models!
+                        break
+                # If model is deprecated/not found (404), break immediately to next model
+                elif any(x in err_msg for x in ["404", "not_found", "not available", "not supported"]):
+                    break
+                else:
+                    # Non-transient error (e.g., bad API key)
+                    raise e
 
     raise last_error
 
