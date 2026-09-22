@@ -31,7 +31,7 @@ def is_sdk_available() -> bool:
     return HAVE_MODERN_GENAI or HAVE_LEGACY_GENAI
 
 
-def call_gemini(prompt: str, system_instruction: str = "", model_name: str = "gemini-2.5-flash", api_key: str = None) -> str:
+def call_gemini(prompt: str, system_instruction: str = "", model_name: str = "gemini-3.6-flash", api_key: str = None) -> str:
     """
     Unified caller for Gemini API that abstracts SDK differences.
     """
@@ -74,7 +74,7 @@ def chat_with_document(
     doc_text: str,
     chat_history: List[Dict[str, str]],
     user_query: str,
-    model_name: str = "gemini-2.5-flash",
+    model_name: str = "gemini-3.6-flash",
     api_key: str = None,
 ) -> str:
     """
@@ -119,7 +119,7 @@ Please answer the question based solely on the document context above:"""
 def generate_document_summary(
     doc_text: str,
     summary_type: str = "Executive Summary",
-    model_name: str = "gemini-2.5-flash",
+    model_name: str = "gemini-3.6-flash",
     api_key: str = None,
 ) -> str:
     """
@@ -169,7 +169,7 @@ Format your output in clean, readable Markdown with headings, bold highlights, a
 def analyze_resume_ats(
     resume_text: str,
     job_description: str = "",
-    model_name: str = "gemini-2.5-flash",
+    model_name: str = "gemini-3.6-flash",
     api_key: str = None,
 ) -> str:
     """

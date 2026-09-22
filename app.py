@@ -108,10 +108,12 @@ with st.sidebar:
     # Model Selection
     model_choice = st.selectbox(
         "Gemini Model",
-        options=["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro"],
+        options=["gemini-3.6-flash", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro", "Custom Model"],
         index=0,
-        help="gemini-2.5-flash is fast, accurate, and cost-efficient for document analysis.",
+        help="gemini-3.6-flash is the latest high-performance model for document analysis.",
     )
+    if model_choice == "Custom Model":
+        model_choice = st.text_input("Enter Model Name", value="gemini-3.6-flash")
 
     st.markdown("---")
 
