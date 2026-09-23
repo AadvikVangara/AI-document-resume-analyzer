@@ -91,49 +91,6 @@ Your default browser will automatically open: `http://localhost:8501` 🎉
 
 ---
 
-## 🐙 Step-by-Step: How to Upload This Project to Your GitHub
-
-If you just created your GitHub account, follow these exact steps to publish this project to your profile:
-
-### Step 1: Create a New Repository on GitHub
-1. Go to [github.com/new](https://github.com/new) (log in to your GitHub account).
-2. Set **Repository name**: `ai-document-resume-analyzer` (or any name you prefer).
-3. Set **Visibility**: Choose **Public** (recommended so you can showcase it in your portfolio) or **Private**.
-4. **Leave all checkboxes UNCHECKED** (do NOT check "Add a README file", "Add .gitignore", or choose a license, because we already have them prepared locally).
-5. Click **Create repository**.
-6. GitHub will now display a page showing your repository URL, which looks like:
-   `https://github.com/<YOUR_GITHUB_USERNAME>/ai-document-resume-analyzer.git`
-
----
-
-### Step 2: Initialize Git and Push from Your Terminal
-Open PowerShell or your terminal in this project directory (`ai-doc-analyzer`):
-
-```powershell
-# 1. Initialize git in this project directory
-git init
-
-# 2. Stage all project files (the .gitignore ensures secrets & .venv are NOT uploaded)
-git add .
-
-# 3. Create your first commit
-git commit -m "Initial commit: AI Document & Resume Analyzer with Gemini and Streamlit"
-
-# 4. Rename the default branch to 'main'
-git branch -M main
-
-# 5. Link your local project to your GitHub repository
-# (REPLACE <YOUR_GITHUB_USERNAME> with your actual GitHub username!)
-git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/ai-document-resume-analyzer.git
-
-# 6. Push your code to GitHub
-git push -u origin main
-```
-
-> **Note on Authentication**: The first time you push, Windows or Git will pop up a window asking you to sign in to GitHub. Click **"Sign in with your browser"** and authorize Git. Once authorized, your code will upload!
-
----
-
 ## 🧠 Core GenAI Concepts Explained
 
 ### 1. In-Context Learning vs. Traditional RAG
